@@ -1,0 +1,423 @@
+ a cross platform Saas named zabunilink,
+for Tanzania businesses where the can get the tender lists and they can either apply themselves or we do it for them.
+the core idea is to help businessmen to get tender details, to get notification and do it earlier, also we help pro business to apply tender and do everything for them.
+
+
+core features:
+- Membership platform
+- notification
+- Membership payment fee collection
+
+Requirements
+- Web portals (user/member portal and admin portal)
+- android app
+- ios app
+
+android and ios apps for users
+so for user there is web app, android app and ios app
+for admin just a web portal
+
+
+Core engines / Getaways / Mechanism
+-Membership engine
+-Tender Engine
+-Email Engine
+-Sms Engine
+-Push Notification Engine
+-Payment Collection Engine
+
+
+Membership
+2 packages for businesses (basic and Pro)
+Monthly Membership Account 
+membership fee collected monthly, quartely, semi, or annually
+
+basic packages is basically a portal that list all the tenders (government , private etc) with all their details 
+Pro package give you ability to request application where by we can apply and comply for you and do all the heavy lifting and you just fulfill it.
+
+
+
+in both packages you get notification access
+
+Tender List
+-Notification to members of new tender (sms, email, push)
+-Tender list that list all tenders
+-Tender Searching and Filtering based on location, category, month
+-ability to mark tender and add to favorities so that he can receive all information regarding that tender
+
+Tender Notification Settings
+-where we member can select to receive which tender notification to receive based on location, category or all tenders
+
+The Portals
+-User portal (web app, android app, ios app)
+- admin panel (web app)
+
+
+
+User portals
+-login/register
+-subscription
+-tender list (with tender filtering by type/category, location, month)
+-request tender application (for pro users)
+
+Tender application
+-my applications
+-won
+-compliance feature (to add documents for compliance)
+
+
+Admin Panel
+-Tender Platform (for adding tenders, setting sender status)
+-User/member management management
+-subscriptions management
+-Catalog (for adding system data like tender locations etc)
+-Tender status is important for sending notification to those who have marked/favoritied it
+
+
+System Implementation
+-SMS (nextsms api this is tanzania based sms and short code provider)
+-Payments (payment collection via selcom , supports cards and mobilemoney)
+-Email notification
+-Push notification
+ 
+ UI - neumorphism
+
+
+
+
+
+1. Product Summary
+
+ZabuniLink is a SaaS for Tanzanian businesses.
+
+Users:
+
+Discover tenders early
+Get alerts
+Track tenders
+Request application support
+
+Revenue:
+
+Subscription (Basic, Pro)
+Optional service fees for applications
+2. Final Tech Stack
+
+Keep it stable and scalable.
+
+Backend
+Laravel 11
+Laravel Sanctum (API auth)
+Laravel Queues (Redis)
+MySQL
+Frontend (Web)
+Vue 3 + Vite
+Tailwind CSS (skip neumorphism for now, keep UI fast)
+Mobile (Cross platform)
+Flutter
+State management: Riverpod or Provider
+Admin Panel
+Laravel + Vue or Filament (fastest option)
+Infrastructure
+VPS (Contabo or AWS Lightsail)
+Nginx
+Redis (queues + caching)
+Supervisor (queue workers)
+3. System Architecture
+
+Single backend API serves:
+
+Web app
+Mobile apps
+
+Structure:
+
+API Layer (Laravel controllers)
+Service Layer (business logic)
+Jobs (notifications, async tasks)
+Integrations:
+NextSMS
+Selcom
+Email (SMTP or Mailgun)
+Firebase (push later)
+4. Core Modules
+4.1 Authentication
+Register
+Login
+Token-based auth (Sanctum)
+Roles:
+user
+admin
+4.2 Membership Engine
+
+Plans:
+
+Basic
+Pro
+
+Features:
+
+Billing cycles:
+Monthly
+Quarterly
+Semi annual
+Annual
+
+Logic:
+
+Active subscription → access granted
+Expired → restrict features
+4.3 Tender Engine
+
+Core fields:
+
+title
+description
+organization
+category_id
+location_id
+deadline
+status (open, closed, awarded)
+
+Features:
+
+Filter by:
+category
+location
+deadline
+Search
+Favorite tenders
+4.4 Notification Engine
+
+Channels:
+
+Email
+SMS (NextSMS)
+Push (later)
+
+Trigger:
+
+New tender
+Tender update
+Deadline reminder
+
+Logic:
+
+Match user preferences
+Queue notifications
+4.5 Payment Engine
+
+Integration:
+
+Selcom API
+
+Flow:
+
+User selects plan
+Request payment
+Redirect to Selcom
+Selcom callback (webhook)
+Verify transaction
+Activate subscription
+4.6 Tender Application (Pro)
+
+Features:
+
+Request application
+Upload documents
+Track status:
+pending
+in progress
+submitted
+won/lost
+
+Admin handles backend work.
+
+5. Database Schema (Simplified)
+users
+id
+name
+email
+phone
+password
+role
+plans
+id
+name (Basic, Pro)
+price
+duration
+subscriptions
+id
+user_id
+plan_id
+start_date
+end_date
+status
+tenders
+id
+title
+description
+category_id
+location_id
+deadline
+status
+categories
+id
+name
+locations
+id
+name
+favorites
+id
+user_id
+tender_id
+notifications
+id
+user_id
+type
+message
+status
+payments
+id
+user_id
+amount
+method
+status
+reference
+tender_applications
+id
+user_id
+tender_id
+status
+6. API Structure (Examples)
+
+Auth:
+
+POST /api/register
+POST /api/login
+
+Tenders:
+
+GET /api/tenders
+GET /api/tenders/{id}
+POST /api/tenders (admin)
+
+Favorites:
+
+POST /api/favorites
+GET /api/favorites
+
+Subscriptions:
+
+POST /api/subscribe
+GET /api/my-subscription
+
+Applications:
+
+POST /api/applications
+GET /api/my-applications
+7. Flutter App Structure
+
+Screens:
+
+Splash
+Login/Register
+Home (tender list)
+Tender details
+Favorites
+Subscription
+Notifications
+Profile
+
+State:
+
+Auth state
+Tender state
+Subscription state
+
+API:
+
+Use Dio or http package
+8. Notification Flow
+
+When admin adds tender:
+
+Save tender
+Dispatch job
+Job filters users:
+by category
+by location
+Send:
+Email
+SMS
+
+Queue required for speed.
+
+9. Selcom Integration Flow
+
+Backend handles:
+
+Create order
+Generate payment link
+Receive callback
+
+Important:
+
+Validate signature
+Store transaction
+Update subscription
+10. NextSMS Integration
+
+Simple flow:
+
+API call from Laravel job
+Send SMS using:
+phone
+message
+
+Optimize:
+
+Batch messages
+Limit frequency
+11. Admin Panel Features
+
+Use Filament for speed.
+
+Modules:
+
+Tenders
+Users
+Subscriptions
+Payments
+Applications
+Categories
+Locations
+12. Security
+Hash passwords (Laravel default)
+Validate all inputs
+Protect APIs with auth
+Rate limit login and SMS
+13. Deployment
+
+Steps:
+
+Setup server
+Install:
+PHP
+MySQL
+Redis
+Nginx
+Deploy Laravel
+Setup queue workers
+Setup cron jobs
+Connect domain
+SSL (Cloudflare or LetsEncrypt)
+
+16. Key Success Factors
+Fast tender updates
+Reliable notifications
+Clean UI - Neumorphism
+Strong data source
+
+
+

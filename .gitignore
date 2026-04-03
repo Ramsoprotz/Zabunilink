@@ -1,0 +1,34 @@
+# Backend
+backend/vendor/
+backend/.env
+backend/storage/*.key
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+backend/bootstrap/cache/*
+backend/database/database.sqlite
+backend/public/hot
+backend/public/storage
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Flutter (future)
+mobile/build/
+mobile/.dart_tool/
+mobile/.packages
+
+.claude/

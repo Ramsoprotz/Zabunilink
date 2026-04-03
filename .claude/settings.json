@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -H \"Accept: application/json\" http://localhost:8000/api/login -X POST -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"john@example.com\"\",\"\"password\"\":\"\"password\"\"}')",
+      "Bash(curl -s -H \"Accept: application/json\" http://localhost:8000/api/tenders)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -H \"Accept: application/json\" http://localhost:8000/api/plans)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(find /home/ramsopro/Documents/ZabuniLink/backend/vendor/filament -path */Tables/Actions/EditAction.php)",
+      "Bash(grep -n \"response\\(\\)->json\" app/Http/Controllers/Api/*.php)",
+      "Bash(1:*)",
+      "Read(//home/ramsopro/Documents/**)",
+      "Bash(/home/ramsopro/Documents/ZabuniLink/backend/.env.example:*)",
+      "Bash(php -r \"require ''vendor/autoload.php''; echo ''OK'';\")",
+      "Bash(sudo php:*)",
+      "Bash(grep -n \"navigationGroup\" /home/ramsopro/Documents/ZabuniLink/backend/app/Filament/Resources/*.php)",
+      "Bash(grep -n \"$view\\\\|getView\" /home/ramsopro/Documents/ZabuniLink/backend/vendor/filament/filament/src/Pages/Page.php)",
+      "Bash(grep -rn \"filament-schemas::component\\\\|filament-schemas::form\\\\|$this->form\" /home/ramsopro/Documents/ZabuniLink/backend/vendor/filament/filament/resources/views/)",
+      "Bash(grep -rn \"\\\\{\\\\{ $this->form \\\\}\\\\}\\\\|filament-schemas::component\" /home/ramsopro/Documents/ZabuniLink/backend/vendor/filament/filament/resources/views/)",
+      "Bash(php -l app/Filament/Pages/BrandingSettings.php)",
+      "Bash(php -l app/Filament/Pages/NotificationTemplates.php)",
+      "Bash(grep -E \"\\\\.php$\")",
+      "Bash(gh auth:*)",
+      "Bash(git config:*)",
+      "Bash(git remote:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(git rm:*)",
+      "Bash(git add:*)"
+    ]
+  }
+}
