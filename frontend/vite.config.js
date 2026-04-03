@@ -5,6 +5,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  base: '/spa/',
   build: {
     outDir: path.resolve(__dirname, '../backend/public/spa'),
     emptyOutDir: true,
