@@ -92,9 +92,11 @@ Route::middleware(['auth:sanctum', 'business'])->prefix('tenderee')->group(funct
 // Public: system branding
 Route::get('/branding', function () {
     $logo = \App\Models\Setting::get('system_logo');
+    $favicon = \App\Models\Setting::get('system_favicon');
     return response()->json([
         'data' => [
             'logo_url' => $logo ? asset(\Illuminate\Support\Facades\Storage::url($logo)) : null,
+            'favicon_url' => $favicon ? asset(\Illuminate\Support\Facades\Storage::url($favicon)) : null,
         ],
     ]);
 });

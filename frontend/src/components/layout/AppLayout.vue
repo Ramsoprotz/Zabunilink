@@ -168,6 +168,17 @@ onMounted(async () => {
   try {
     const { data } = await api.get('/branding')
     logoUrl.value = data.data?.logo_url || null
+
+    // Set dynamic favicon
+    if (data.data?.favicon_url) {
+      let link = document.querySelector("link[rel~='icon']")
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = 'icon'
+        document.head.appendChild(link)
+      }
+      link.href = data.data.favicon_url
+    }
   } catch {
     // Keep default branding
   }

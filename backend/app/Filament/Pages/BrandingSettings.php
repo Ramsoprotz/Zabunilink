@@ -16,6 +16,8 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
 use UnitEnum;
 
 class BrandingSettings extends Page implements HasForms
@@ -23,7 +25,7 @@ class BrandingSettings extends Page implements HasForms
     use InteractsWithForms;
 
     protected static string|BackedEnum|null $navigationIcon  = 'heroicon-o-photo';
-    protected static ?string                $navigationLabel = 'System Logo';
+    protected static ?string                $navigationLabel = 'Branding';
     protected static string|UnitEnum|null   $navigationGroup = 'Settings';
     protected static ?int                   $navigationSort  = 1;
 
@@ -38,6 +40,7 @@ class BrandingSettings extends Page implements HasForms
     {
         $this->form->fill([
             'system_logo' => Setting::get('system_logo'),
+            'system_favicon' => Setting::get('system_favicon'),
         ]);
     }
 
@@ -64,14 +67,35 @@ class BrandingSettings extends Page implements HasForms
                             ->maxSize(2048)
                             ->imageResizeMode('contain')
                             ->imageCropAspectRatio(null)
-                            ->helperText('Recommended size: 200×60 pixels (PNG or SVG with transparent background). Max 2 MB.'),
+                            ->helperText('Recommended: 200×60 px, PNG with transparent background or SVG. Max 2 MB.'),
 
-                        Placeholder::make('guidelines')
-                            ->label('Guidelines')
+                        Placeholder::make('logo_guidelines')
+                            ->label('Logo Guidelines')
                             ->content('• Use a horizontal/landscape logo for best results in the sidebar.
 • Recommended dimensions: 200×60 px (width × height).
 • PNG with transparent background or SVG works best.
 • If no logo is set, the default "ZabuniLink" text branding is shown.'),
+                    ]),
+
+                Section::make('Favicon')
+                    ->description('Upload a favicon for browser tabs and bookmarks. It will be automatically resized to 48×48 pixels.')
+                    ->icon('heroicon-o-star')
+                    ->schema([
+                        FileUpload::make('system_favicon')
+                            ->label('Favicon')
+                            ->image()
+                            ->disk('public')
+                            ->directory('branding')
+                            ->maxSize(1024)
+                            ->acceptedFileTypes(['image/png', 'image/x-icon', 'image/svg+xml', 'image/jpeg'])
+                            ->helperText('Upload a square image (PNG, ICO, SVG, or JPG). It will be resized to 48×48 px automatically. Max 1 MB.'),
+
+                        Placeholder::make('favicon_guidelines')
+                            ->label('Favicon Guidelines')
+                            ->content('• Upload a square image — ideally your logo icon or monogram.
+• Recommended: 512×512 px source image (will be resized to 48×48 px).
+• PNG with transparent background works best.
+• The favicon appears in browser tabs, bookmarks, and mobile home screens.'),
                     ]),
             ])
             ->statePath('data');
@@ -81,18 +105,38 @@ class BrandingSettings extends Page implements HasForms
     {
         $state = $this->form->getState();
 
+        // Handle logo
         $logoPath = $state['system_logo'] ?? null;
-
-        // Delete old logo file if replaced
         $oldLogo = Setting::get('system_logo');
         if ($oldLogo && $oldLogo !== $logoPath) {
             Storage::disk('public')->delete($oldLogo);
         }
-
         Setting::set('system_logo', $logoPath, 'branding');
 
+        // Handle favicon
+        $faviconPath = $state['system_favicon'] ?? null;
+        $oldFavicon = Setting::get('system_favicon');
+        if ($oldFavicon && $oldFavicon !== $faviconPath) {
+            Storage::disk('public')->delete($oldFavicon);
+        }
+
+        // Resize favicon to 48x48 if it's a raster image
+        if ($faviconPath && !str_ends_with($faviconPath, '.svg') && !str_ends_with($faviconPath, '.ico')) {
+            try {
+                $fullPath = Storage::disk('public')->path($faviconPath);
+                $manager = new ImageManager(new Driver());
+                $image = $manager->read($fullPath);
+                $image->cover(48, 48);
+                $image->toPng()->save($fullPath);
+            } catch (\Exception $e) {
+                // If resize fails, keep original
+            }
+        }
+
+        Setting::set('system_favicon', $faviconPath, 'branding');
+
         Notification::make()
-            ->title('System logo saved successfully.')
+            ->title('Branding settings saved successfully.')
             ->success()
             ->send();
     }
@@ -101,7 +145,7 @@ class BrandingSettings extends Page implements HasForms
     {
         return [
             Action::make('save')
-                ->label('Save Logo')
+                ->label('Save Branding')
                 ->icon('heroicon-o-check')
                 ->action('save'),
         ];
