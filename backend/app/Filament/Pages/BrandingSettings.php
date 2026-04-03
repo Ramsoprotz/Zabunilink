@@ -38,9 +38,12 @@ class BrandingSettings extends Page implements HasForms
 
     public function mount(): void
     {
+        $logo = Setting::get('system_logo');
+        $favicon = Setting::get('system_favicon');
+
         $this->form->fill([
-            'system_logo' => Setting::get('system_logo'),
-            'system_favicon' => Setting::get('system_favicon'),
+            'system_logo' => $logo ? [$logo] : [],
+            'system_favicon' => $favicon ? [$favicon] : [],
         ]);
     }
 
@@ -105,8 +108,16 @@ class BrandingSettings extends Page implements HasForms
     {
         $state = $this->form->getState();
 
+        // FileUpload returns array or string depending on context
+        $logoPath = is_array($state['system_logo'] ?? null)
+            ? collect($state['system_logo'])->first()
+            : ($state['system_logo'] ?? null);
+
+        $faviconPath = is_array($state['system_favicon'] ?? null)
+            ? collect($state['system_favicon'])->first()
+            : ($state['system_favicon'] ?? null);
+
         // Handle logo
-        $logoPath = $state['system_logo'] ?? null;
         $oldLogo = Setting::get('system_logo');
         if ($oldLogo && $oldLogo !== $logoPath) {
             Storage::disk('public')->delete($oldLogo);
@@ -114,7 +125,6 @@ class BrandingSettings extends Page implements HasForms
         Setting::set('system_logo', $logoPath, 'branding');
 
         // Handle favicon
-        $faviconPath = $state['system_favicon'] ?? null;
         $oldFavicon = Setting::get('system_favicon');
         if ($oldFavicon && $oldFavicon !== $faviconPath) {
             Storage::disk('public')->delete($oldFavicon);
