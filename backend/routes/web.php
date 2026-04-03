@@ -2,6 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Filament admin panel is auto-registered at /admin
+
+// Catch-all: serve the Vue SPA for all non-API, non-admin routes
+Route::get('/{any?}', function () {
+    return file_get_contents(public_path('spa/index.html'));
+})->where('any', '^(?!api|admin|livewire|filament|storage).*$');
