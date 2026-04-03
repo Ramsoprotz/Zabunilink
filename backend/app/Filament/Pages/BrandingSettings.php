@@ -18,7 +18,6 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
 use UnitEnum;
 
 class BrandingSettings extends Page implements HasForms
@@ -145,8 +144,8 @@ class BrandingSettings extends Page implements HasForms
             if (!str_ends_with($newFavicon, '.svg') && !str_ends_with($newFavicon, '.ico')) {
                 try {
                     $fullPath = Storage::disk('public')->path($newFavicon);
-                    $manager = new ImageManager(new Driver());
-                    $image = $manager->read($fullPath);
+                    $manager = ImageManager::usingDriver('gd');
+                    $image = $manager->decodePath($fullPath);
                     $image->cover(48, 48);
                     $image->toPng()->save($fullPath);
                 } catch (\Exception $e) {
