@@ -391,6 +391,7 @@ async function applyDirect() {
     const { data } = await api.post('/applications', {
       tender_id: tender.value.id,
       notes: applyNotes.value || null,
+      type: 'direct',
     })
     // Upload documents if any were attached
     if (applyDocs.value.length > 0) {
@@ -423,6 +424,7 @@ async function requestProApplication() {
     await api.post('/applications', {
       tender_id: tender.value.id,
       notes: `Pro application request for: ${tender.value.title}`,
+      type: 'assisted',
     })
     applySuccess.value = true
   } catch (err) {

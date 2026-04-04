@@ -39,14 +39,15 @@ class TenderApplicationController extends Controller
         $validated = $request->validate([
             'tender_id' => 'required|integer|exists:tenders,id',
             'notes' => 'nullable|string|max:2000',
+            'type' => 'nullable|string|in:direct,assisted',
         ]);
 
         $user = $request->user();
+        $tender = Tender::findOrFail($validated['tender_id']);
 
         // Business-posted tenders are open to all authenticated users.
         // External/admin tenders require a Pro or Business subscription.
-        $tender = Tender::findOrFail($validated['tender_id']);
-        if ($tender->source !== 'business' && ! $user->isPro()) {
+        if ($tender->source !== 'business' && !$user->isPro()) {
             return response()->json([
                 'message' => 'Pro subscription required to apply for this tender.',
             ], 403);
@@ -63,11 +64,17 @@ class TenderApplicationController extends Controller
             ], 409);
         }
 
+        // "assisted" = Let us apply for you (Pro feature), starts as pending
+        // "direct" = Apply yourself, starts as submitted
+        $type = $validated['type'] ?? 'direct';
+        $status = $type === 'assisted' ? 'pending' : 'submitted';
+
         $application = TenderApplication::create([
             'user_id' => $user->id,
             'tender_id' => $validated['tender_id'],
             'notes' => $validated['notes'] ?? null,
-            'status' => 'draft',
+            'status' => $status,
+            'submitted_at' => now(),
             'documents' => [],
         ]);
 
@@ -79,7 +86,7 @@ class TenderApplicationController extends Controller
         }
 
         return response()->json([
-            'message' => 'Application created successfully.',
+            'message' => 'Application submitted successfully.',
             'data' => $application->load('tender'),
         ], 201);
     }

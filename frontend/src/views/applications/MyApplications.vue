@@ -113,11 +113,12 @@ const selectedStatus = ref('')
 
 const statuses = [
   { value: '', label: t('common.all') },
+  { value: 'submitted', label: t('applications.status_submitted') },
   { value: 'pending', label: t('applications.status_pending') },
   { value: 'in_progress', label: t('applications.status_in_progress') },
-  { value: 'submitted', label: t('applications.status_submitted') },
-  { value: 'won', label: t('applications.status_won') },
-  { value: 'lost', label: t('applications.status_lost') },
+  { value: 'shortlisted', label: t('applications.status_shortlisted') },
+  { value: 'awarded', label: t('applications.status_awarded') },
+  { value: 'rejected', label: t('applications.status_rejected') },
 ]
 
 function formatDate(dateStr) {
@@ -137,11 +138,13 @@ function formatStatus(status) {
 
 function statusBadgeClass(status) {
   const map = {
+    submitted: 'bg-primary/10 text-primary',
     pending: 'bg-warning/10 text-warning',
     in_progress: 'bg-info/10 text-info',
-    submitted: 'bg-primary/10 text-primary',
-    won: 'bg-success/10 text-success',
-    lost: 'bg-danger/10 text-danger',
+    shortlisted: 'bg-secondary/10 text-secondary',
+    awarded: 'bg-success/10 text-success',
+    rejected: 'bg-danger/10 text-danger',
+    draft: 'bg-gray-100 text-gray-500',
   }
   return map[status] || 'bg-warning/10 text-warning'
 }
