@@ -74,8 +74,7 @@ class PaymentService
             'billing.postcode_or_pobox'   => '00000',
             'billing.country'             => 'TZ',
             'billing.phone'               => $phone,
-            'merchant_remarks'            => 'ZabuniLink ' . ($subscription->plan->name ?? 'Plan') . ' subscription',
-            'payer_remarks'               => 'ZabuniLink subscription payment',
+            'header_colour'               => '#10b981',
         ];
 
         $orderResponse = $this->selcomService->createOrder($orderData);
