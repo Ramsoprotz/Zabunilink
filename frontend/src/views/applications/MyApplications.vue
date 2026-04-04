@@ -161,7 +161,7 @@ async function fetchApplications(page = 1) {
   try {
     const params = { page, per_page: 15 }
     if (selectedStatus.value) params.status = selectedStatus.value
-    const { data } = await api.get('/applications', { params })
+    const { data } = await api.get('/my-applications', { params })
     applications.value = data.data || []
     pagination.value = data.meta || {}
   } catch {
