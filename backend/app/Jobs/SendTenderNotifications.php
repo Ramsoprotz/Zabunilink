@@ -29,8 +29,18 @@ class SendTenderNotifications implements ShouldQueue
     {
         $tender = $this->tender->load(['category', 'location']);
 
-        $preferences = NotificationPreference::whereJsonContains('category_ids', $tender->category_id)
-            ->whereJsonContains('location_ids', $tender->location_id)
+        // Match users whose preferences:
+        //  - have no category filter (empty array) OR include this tender's category
+        //  - AND have no location filter (empty array) OR include this tender's location
+        $preferences = NotificationPreference::query()
+            ->where(function ($q) use ($tender) {
+                $q->whereJsonLength('category_ids', 0)
+                  ->orWhereJsonContains('category_ids', $tender->category_id);
+            })
+            ->where(function ($q) use ($tender) {
+                $q->whereJsonLength('location_ids', 0)
+                  ->orWhereJsonContains('location_ids', $tender->location_id);
+            })
             ->with('user')
             ->get();
 
