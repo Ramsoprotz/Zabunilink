@@ -116,7 +116,7 @@ class SmsSettings extends Page implements HasForms
         Setting::set('nextsms_username',  $state['nextsms_username'],  'sms');
         Setting::set('nextsms_password',  $state['nextsms_password'],  'sms');
         Setting::set('nextsms_sender_id', $state['nextsms_sender_id'], 'sms');
-        Setting::set('nextsms_test_mode', '1', 'sms');
+        Setting::set('nextsms_test_mode', $state['nextsms_test_mode'] ? '1' : '0', 'sms');
 
         $adminPhone = auth()->user()->phone ?? null;
 
@@ -139,8 +139,9 @@ class SmsSettings extends Page implements HasForms
                 ->danger()
                 ->send();
         } else {
+            $isTest = (bool) ($state['nextsms_test_mode'] ?? false);
             Notification::make()
-                ->title('Test SMS sent to ' . $adminPhone . ' (test mode — not actually delivered).')
+                ->title('Test SMS sent to ' . $adminPhone . ($isTest ? ' (test mode — not actually delivered).' : ' — check your phone!'))
                 ->success()
                 ->send();
         }
