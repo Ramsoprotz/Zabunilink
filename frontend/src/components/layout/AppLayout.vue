@@ -59,6 +59,22 @@
             <span class="text-sm">{{ item.label }}</span>
           </router-link>
         </template>
+
+        <!-- Post Tender teaser (Basic/Pro plan) -->
+        <template v-else>
+          <div class="pt-4 pb-1 px-4">
+            <span class="text-[10px] font-bold tracking-widest text-text-light/60 uppercase">{{ $t('nav.my_business') }}</span>
+          </div>
+          <button
+            type="button"
+            class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-text-light hover:text-text transition-all duration-200 text-left"
+            @click="promptBusinessUpgrade"
+          >
+            <span class="text-lg" v-html="postTenderIcon" />
+            <span class="text-sm flex-1">{{ $t('nav.post_tender') }}</span>
+            <span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-amber-500/10 text-amber-600 uppercase tracking-wide">Business</span>
+          </button>
+        </template>
       </nav>
 
       <!-- Logout -->
@@ -148,6 +164,39 @@
         <router-view />
       </main>
     </div>
+
+    <!-- Business upgrade modal -->
+    <div
+      v-if="showUpgradeModal"
+      class="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4"
+      @click.self="showUpgradeModal = false"
+    >
+      <div class="neu-card max-w-sm w-full p-6 space-y-4">
+        <div class="flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 mx-auto">
+          <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div class="text-center space-y-1">
+          <h3 class="text-lg font-bold text-text">{{ $t('nav.upgrade_business_title') }}</h3>
+          <p class="text-sm text-text-light">{{ $t('nav.upgrade_business_desc') }}</p>
+        </div>
+        <div class="flex gap-3 pt-2">
+          <button
+            class="neu-btn-secondary flex-1 px-4 py-2.5 text-sm font-semibold"
+            @click="showUpgradeModal = false"
+          >
+            {{ $t('common.cancel') }}
+          </button>
+          <button
+            class="neu-btn-primary flex-1 px-4 py-2.5 text-sm font-semibold"
+            @click="goToUpgrade"
+          >
+            {{ $t('nav.view_plans') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -163,6 +212,19 @@ const authStore = useAuthStore()
 const { t, locale } = useI18n()
 const sidebarOpen = ref(false)
 const logoUrl = ref(null)
+const showUpgradeModal = ref(false)
+
+const postTenderIcon = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+
+function promptBusinessUpgrade() {
+  sidebarOpen.value = false
+  showUpgradeModal.value = true
+}
+
+function goToUpgrade() {
+  showUpgradeModal.value = false
+  router.push('/subscription')
+}
 
 onMounted(async () => {
   try {

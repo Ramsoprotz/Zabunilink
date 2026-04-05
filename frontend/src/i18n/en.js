@@ -84,6 +84,9 @@ export default {
     biz_dashboard: 'Dashboard',
     post_tender: 'Post Tender',
     my_tenders: 'My Tenders',
+    upgrade_business_title: 'Business plan required',
+    upgrade_business_desc: 'Posting tenders and receiving applications is available on the Business plan. Upgrade to unlock this feature.',
+    view_plans: 'View Plans',
   },
 
   // Dashboard

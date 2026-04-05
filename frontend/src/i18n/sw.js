@@ -83,6 +83,9 @@ export default {
     biz_dashboard: 'Dashibodi',
     post_tender: 'Tuma Zabuni',
     my_tenders: 'Zabuni Zangu',
+    upgrade_business_title: 'Mpango wa Business unahitajika',
+    upgrade_business_desc: 'Kutuma zabuni na kupokea maombi kunapatikana katika mpango wa Business. Pandisha ili kupata kipengele hiki.',
+    view_plans: 'Tazama Mipango',
   },
 
   // Dashboard
