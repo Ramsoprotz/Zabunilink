@@ -351,7 +351,7 @@ export default {
     requirements: 'Requirements',
     requirements_ph: 'List the requirements applicants must meet...',
     contact_info: 'Contact Information',
-    contact_ph: 'e.g. procurement@company.co.tz or +255 xxx xxx xxx',
+    contact_ph: 'e.g. procurement(at)company.co.tz or +255 xxx xxx xxx',
     documents_label: 'Tender Documents',
     documents_hint: '(PDF, Word — optional)',
     drop_click: 'Click to upload or drag & drop',

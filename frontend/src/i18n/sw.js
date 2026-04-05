@@ -348,7 +348,7 @@ export default {
     requirements: 'Mahitaji',
     requirements_ph: 'Orodhesha mahitaji ambayo waombaji lazima wakidhi...',
     contact_info: 'Mawasiliano',
-    contact_ph: 'mfano. ununuzi@kampuni.co.tz au +255 xxx xxx xxx',
+    contact_ph: 'mfano. ununuzi(at)kampuni.co.tz au +255 xxx xxx xxx',
     documents_label: 'Nyaraka za Zabuni',
     documents_hint: '(PDF, Word — si lazima)',
     drop_click: 'Bonyeza kupakia au buruta na ushushe',
