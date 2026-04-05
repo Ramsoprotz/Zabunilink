@@ -27,8 +27,6 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/payments/callback', [PaymentController::class, 'callback']);
 
 // Public browsing
-Route::get('/tenders', [TenderController::class, 'index']);
-Route::get('/tenders/{id}', [TenderController::class, 'show']);
 Route::get('/plans', [SubscriptionController::class, 'plans']);
 Route::get('/categories', function () {
     return response()->json(['data' => Category::where('is_active', true)->get()]);
@@ -58,6 +56,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Basic-tier features (require an active subscription or trial)
     Route::middleware('subscribed')->group(function () {
+        // Tender browsing
+        Route::get('/tenders', [TenderController::class, 'index']);
+        Route::get('/tenders/{id}', [TenderController::class, 'show']);
+
         // Favorites
         Route::get('/favorites', [FavoriteController::class, 'index']);
         Route::post('/favorites', [FavoriteController::class, 'store']);
@@ -104,8 +106,8 @@ Route::get('/branding', function () {
     ]);
 });
 
-// Public: increment tender view count
-Route::post('/tenders/{id}/view', function ($id) {
+// Increment tender view count (subscribed users only)
+Route::middleware(['auth:sanctum', 'subscribed'])->post('/tenders/{id}/view', function ($id) {
     Tender::where('id', $id)->increment('views_count');
     return response()->json(['ok' => true]);
 });
