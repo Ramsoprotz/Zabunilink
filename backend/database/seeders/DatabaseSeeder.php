@@ -14,6 +14,9 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Notification templates (email + SMS)
+        $this->call(NotificationTemplateSeeder::class);
+
         // Admin user
         $admin = User::create([
             'name' => 'ZabuniLink CTO',
