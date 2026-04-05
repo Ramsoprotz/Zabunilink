@@ -58,6 +58,11 @@ class User extends Authenticatable implements FilamentUser
         return in_array($this->role, ['admin', 'support']);
     }
 
+    public function hasActiveSubscription(): bool
+    {
+        return $this->activeSubscription()->exists();
+    }
+
     public function isPro(): bool
     {
         $sub = $this->activeSubscription;

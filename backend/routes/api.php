@@ -45,12 +45,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
 
-    // Favorites
-    Route::get('/favorites', [FavoriteController::class, 'index']);
-    Route::post('/favorites', [FavoriteController::class, 'store']);
-    Route::delete('/favorites/{tenderId}', [FavoriteController::class, 'destroy']);
-
-    // Subscriptions
+    // Subscriptions (always accessible so users can pay / start trial)
     Route::get('/my-subscription', [SubscriptionController::class, 'mySubscription']);
     Route::post('/subscribe', [SubscriptionController::class, 'subscribe']);
     Route::post('/subscription/change-plan', [SubscriptionController::class, 'changePlan']);
@@ -61,17 +56,25 @@ Route::middleware('auth:sanctum')->group(function () {
     // Payments
     Route::get('/payments/{reference}/status', [PaymentController::class, 'checkStatus']);
 
-    // Tender Applications
-    Route::get('/my-applications', [TenderApplicationController::class, 'index']);
-    Route::post('/applications', [TenderApplicationController::class, 'store']);
-    Route::get('/applications/{id}', [TenderApplicationController::class, 'show']);
-    Route::post('/applications/{id}/documents', [TenderApplicationController::class, 'uploadDocuments']);
+    // Basic-tier features (require an active subscription or trial)
+    Route::middleware('subscribed')->group(function () {
+        // Favorites
+        Route::get('/favorites', [FavoriteController::class, 'index']);
+        Route::post('/favorites', [FavoriteController::class, 'store']);
+        Route::delete('/favorites/{tenderId}', [FavoriteController::class, 'destroy']);
 
-    // Notifications
-    Route::get('/notifications', [NotificationController::class, 'index']);
-    Route::get('/notification-preferences', [NotificationController::class, 'preferences']);
-    Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
-    Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+        // Tender Applications
+        Route::get('/my-applications', [TenderApplicationController::class, 'index']);
+        Route::post('/applications', [TenderApplicationController::class, 'store']);
+        Route::get('/applications/{id}', [TenderApplicationController::class, 'show']);
+        Route::post('/applications/{id}/documents', [TenderApplicationController::class, 'uploadDocuments']);
+
+        // Notifications
+        Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('/notification-preferences', [NotificationController::class, 'preferences']);
+        Route::put('/notification-preferences', [NotificationController::class, 'updatePreferences']);
+        Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
+    });
 
 });
 

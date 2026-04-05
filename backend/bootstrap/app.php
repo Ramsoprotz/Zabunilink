@@ -13,8 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'pro'      => \App\Http\Middleware\EnsureProSubscription::class,
-            'business' => \App\Http\Middleware\EnsureBusinessSubscription::class,
+            'subscribed' => \App\Http\Middleware\EnsureActiveSubscription::class,
+            'pro'        => \App\Http\Middleware\EnsureProSubscription::class,
+            'business'   => \App\Http\Middleware\EnsureBusinessSubscription::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

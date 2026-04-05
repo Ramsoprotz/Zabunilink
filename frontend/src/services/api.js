@@ -24,6 +24,12 @@ api.interceptors.response.use(
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       router.push('/login')
+    } else if (
+      error.response?.status === 403 &&
+      error.response?.data?.code === 'subscription_required' &&
+      router.currentRoute.value.name !== 'Subscription'
+    ) {
+      router.push('/subscription')
     }
     return Promise.reject(error)
   }

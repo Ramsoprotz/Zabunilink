@@ -46,6 +46,12 @@ class SendTenderNotifications implements ShouldQueue
 
         foreach ($preferences as $preference) {
             $user = $preference->user;
+
+            // Notifications are a subscription benefit — skip users without an active plan.
+            if (! $user || ! $user->hasActiveSubscription()) {
+                continue;
+            }
+
             $title = 'New Tender: ' . $tender->title;
             $message = "A new tender \"{$tender->title}\" has been posted by {$tender->organization}. Deadline: {$tender->deadline->format('d M Y')}.";
 
