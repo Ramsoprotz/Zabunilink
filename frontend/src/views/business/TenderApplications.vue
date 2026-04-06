@@ -150,14 +150,41 @@
 
         <!-- Action buttons -->
         <div class="flex flex-wrap items-center gap-2 pt-1">
-          <!-- Already awarded -->
+          <!-- Awarded — show badge + undo -->
           <template v-if="app.status === 'awarded'">
             <span class="neu-badge-success px-4 py-2 text-sm font-semibold">
               {{ $t('business.awarded_label') }}
             </span>
+            <button
+              class="neu-btn flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-light"
+              :disabled="actionLoading === app.id"
+              @click="updateStatus(app, 'shortlisted')"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              {{ $t('business.undo_award') }}
+            </button>
           </template>
 
-          <!-- Active actions -->
+          <!-- Rejected — show badge + reconsider -->
+          <template v-else-if="app.status === 'rejected'">
+            <span class="neu-badge-danger px-4 py-2 text-sm font-semibold">
+              {{ $t('applications.status_rejected') }}
+            </span>
+            <button
+              class="neu-btn flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-light"
+              :disabled="actionLoading === app.id"
+              @click="updateStatus(app, 'pending')"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              {{ $t('business.reconsider') }}
+            </button>
+          </template>
+
+          <!-- Active actions (pending / shortlisted) -->
           <template v-else>
             <!-- Shortlist: only if pending -->
             <button
@@ -171,6 +198,19 @@
                   d="M5 13l4 4L19 7" />
               </svg>
               {{ $t('business.shortlist_btn') }}
+            </button>
+
+            <!-- Unshortlist: back to pending -->
+            <button
+              v-if="app.status === 'shortlisted'"
+              class="neu-btn flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-text-light"
+              :disabled="actionLoading === app.id"
+              @click="updateStatus(app, 'pending')"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+              </svg>
+              {{ $t('business.unshortlist') }}
             </button>
 
             <!-- Award: only if shortlisted -->
@@ -199,12 +239,12 @@
               </svg>
               {{ $t('business.reject_btn') }}
             </button>
-
-            <svg v-if="actionLoading === app.id" class="w-5 h-5 animate-spin text-primary ml-2" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
           </template>
+
+          <svg v-if="actionLoading === app.id" class="w-5 h-5 animate-spin text-primary ml-2" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+          </svg>
         </div>
 
         <!-- Inline error -->

@@ -11,6 +11,7 @@ class TenderApplication extends Model
         'user_id',
         'tender_id',
         'status',
+        'previous_status',
         'notes',
         'admin_notes',
         'tenderee_notes',

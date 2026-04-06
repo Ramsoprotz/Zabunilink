@@ -166,32 +166,57 @@ class TendereeController extends Controller
             'tenderee_notes' => 'nullable|string',
         ]);
 
-        DB::transaction(function () use ($validated, $application, $tender) {
+        $oldStatus = $application->status;
+        $newStatus = $validated['status'];
+
+        DB::transaction(function () use ($validated, $application, $tender, $oldStatus, $newStatus) {
             $updates = [
-                'status'         => $validated['status'],
-                'tenderee_notes' => $validated['tenderee_notes'] ?? $application->tenderee_notes,
+                'status'          => $newStatus,
+                'previous_status' => $oldStatus,
+                'tenderee_notes'  => $validated['tenderee_notes'] ?? $application->tenderee_notes,
             ];
 
-            if ($validated['status'] === 'awarded') {
+            if ($newStatus === 'awarded') {
                 $updates['awarded_at'] = now();
 
-                // Reject all other applications for this tender
+                // Save each application's current status before auto-rejecting
                 TenderApplication::where('tender_id', $tender->id)
                     ->where('id', '!=', $application->id)
-                    ->update(['status' => 'rejected']);
+                    ->where('status', '!=', 'rejected')
+                    ->each(function ($app) {
+                        $app->update([
+                            'previous_status' => $app->status,
+                            'status'          => 'rejected',
+                        ]);
+                    });
+            }
+
+            // Undo award: restore other applications to their previous status
+            if ($oldStatus === 'awarded' && $newStatus !== 'awarded') {
+                $updates['awarded_at'] = null;
+
+                TenderApplication::where('tender_id', $tender->id)
+                    ->where('id', '!=', $application->id)
+                    ->whereNotNull('previous_status')
+                    ->each(function ($app) {
+                        $app->update([
+                            'status'          => $app->previous_status,
+                            'previous_status' => null,
+                        ]);
+                    });
             }
 
             $application->update($updates);
 
             // Send notification to the applicant
-            $statusLabel = ucfirst($validated['status']);
+            $statusLabel = ucfirst($newStatus);
             TenderNotification::create([
                 'user_id'   => $application->user_id,
                 'tender_id' => $tender->id,
                 'type'      => 'application_status_update',
                 'channel'   => 'in_app',
                 'title'     => "Application {$statusLabel}",
-                'message'   => "Your application for \"{$tender->title}\" has been {$validated['status']}.",
+                'message'   => "Your application for \"{$tender->title}\" has been {$newStatus}.",
                 'status'    => 'sent',
             ]);
         });
