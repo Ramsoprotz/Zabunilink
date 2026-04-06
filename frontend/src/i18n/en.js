@@ -27,6 +27,8 @@ export default {
     error: 'Error',
     na: 'N/A',
     done: 'Done',
+    offline: 'You are offline. Check your internet connection.',
+    back_online: 'You are back online.',
     tanzania: 'Tanzania',
     soon: 'Soon!',
   },

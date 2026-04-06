@@ -28,6 +28,8 @@ export default {
     na: 'Haijulikani',
     tanzania: 'Tanzania',
     done: 'Tayari',
+    offline: 'Huna mtandao. Angalia muunganisho wako wa intaneti.',
+    back_online: 'Umerudi mtandaoni.',
     soon: 'Karibu!',
   },
 

@@ -15,6 +15,19 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
+}, (error) => {
+  return Promise.reject(error)
+})
+
+// Abort requests when offline to fail fast
+api.interceptors.request.use((config) => {
+  if (!navigator.onLine) {
+    const err = new Error('No internet connection')
+    err.code = 'ERR_NETWORK'
+    err.isOffline = true
+    return Promise.reject(err)
+  }
+  return config
 })
 
 api.interceptors.response.use(
