@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Plan;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
@@ -76,7 +77,7 @@ class PlanPricing extends Page implements HasForms
                         Repeater::make('plans')
                             ->label('')
                             ->schema([
-                                TextInput::make('id')->hidden(),
+                                Hidden::make('id'),
 
                                 TextInput::make('name')
                                     ->label('Plan Name')
