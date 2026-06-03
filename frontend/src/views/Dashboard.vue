@@ -192,8 +192,8 @@ onMounted(async () => {
 
     // Fetch applications count
     try {
-      const { data } = await api.get('/applications')
-      stats.value.applications = data.data?.length || data.meta?.total || 0
+      const { data } = await api.get('/applications', { params: { per_page: 1 } })
+      stats.value.applications = data.total ?? data.data?.length ?? 0
     } catch {
       stats.value.applications = 0
     }

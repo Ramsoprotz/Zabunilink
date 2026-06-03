@@ -16,7 +16,14 @@ export const useTenderStore = defineStore('tenders', () => {
     try {
       const { data } = await api.get('/tenders', { params })
       tenders.value = data.data
-      pagination.value = data.meta || {}
+      pagination.value = {
+        total: data.total,
+        per_page: data.per_page,
+        current_page: data.current_page,
+        last_page: data.last_page,
+        from: data.from,
+        to: data.to,
+      }
     } finally {
       loading.value = false
     }
@@ -38,7 +45,12 @@ export const useTenderStore = defineStore('tenders', () => {
   async function fetchFavorites(page = 1) {
     const { data } = await api.get('/favorites', { params: { page, per_page: 15 } })
     favorites.value = data.data
-    favoritesPagination.value = data.meta || {}
+    favoritesPagination.value = {
+      total: data.total,
+      per_page: data.per_page,
+      current_page: data.current_page,
+      last_page: data.last_page,
+    }
   }
 
   async function toggleFavorite(tenderId) {

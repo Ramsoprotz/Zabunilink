@@ -166,7 +166,12 @@ async function fetchApplications(page = 1) {
     if (selectedStatus.value) params.status = selectedStatus.value
     const { data } = await api.get('/my-applications', { params })
     applications.value = data.data || []
-    pagination.value = data.meta || {}
+    pagination.value = {
+      total: data.total,
+      per_page: data.per_page,
+      current_page: data.current_page,
+      last_page: data.last_page,
+    }
   } catch {
     error.value = 'Failed to load applications.'
   } finally {

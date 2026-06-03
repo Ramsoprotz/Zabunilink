@@ -18,7 +18,12 @@ export const useBusinessStore = defineStore('business', () => {
         params: { page, per_page: perPage },
       })
       myTenders.value = data.data ?? data
-      tendersPagination.value = data.meta || {}
+      tendersPagination.value = {
+        total: data.total,
+        per_page: data.per_page,
+        current_page: data.current_page,
+        last_page: data.last_page,
+      }
     } finally {
       loading.value = false
     }
@@ -77,7 +82,12 @@ export const useBusinessStore = defineStore('business', () => {
         params: { page, per_page: perPage },
       })
       applications.value = data.data ?? data
-      applicationsPagination.value = data.meta || {}
+      applicationsPagination.value = {
+        total: data.total,
+        per_page: data.per_page,
+        current_page: data.current_page,
+        last_page: data.last_page,
+      }
       return applications.value
     } finally {
       loading.value = false

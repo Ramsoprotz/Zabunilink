@@ -286,7 +286,12 @@ async function markAllRead() {
 async function fetchNotifications(page = 1) {
   const { data } = await api.get('/notifications', { params: { page, per_page: 15 } })
   notifications.value = data.data || []
-  pagination.value = data.meta || {}
+  pagination.value = {
+    total: data.total,
+    per_page: data.per_page,
+    current_page: data.current_page,
+    last_page: data.last_page,
+  }
   currentPage.value = page
 }
 
