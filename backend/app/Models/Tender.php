@@ -20,6 +20,8 @@ class Tender extends Model
         'location_id',
         'type',
         'source',
+        'external_id',
+        'imported_at',
         'value',
         'deadline',
         'published_date',
@@ -40,6 +42,7 @@ class Tender extends Model
         return [
             'deadline' => 'date',
             'published_date' => 'date',
+            'imported_at' => 'datetime',
             'value' => 'decimal:2',
             'is_published' => 'boolean',
             'documents' => 'array',

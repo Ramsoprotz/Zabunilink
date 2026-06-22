@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\TenderIngestController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\NotificationController;
@@ -78,6 +79,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/notifications/{id}/read', [NotificationController::class, 'markRead']);
     });
 
+});
+
+// Admin ingest API (Sanctum token + admin role)
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::post('/tenders/ingest', [TenderIngestController::class, 'bulk']);
 });
 
 // Tenderee routes (Business plan)
