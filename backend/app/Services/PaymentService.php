@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Integrations\SelcomService;
+use App\Integrations\SnippeService;
 use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\User;
@@ -13,21 +14,34 @@ class PaymentService
 {
     public function __construct(
         protected SelcomService $selcomService,
+        protected SnippeService $snippeService,
     ) {}
 
     /**
      * Initiate a payment for a subscription.
      *
-     * Creates a Selcom order and returns the payment record with gateway URL.
-     * The user is redirected to Selcom's payment page which handles
-     * mobile money (USSD push), cards, and TanQR.
+     * gateway 'snippe': Snippe fires a USSD push straight to the user's
+     * phone — the user stays in-app and we poll/receive a webhook.
+     * gateway 'selcom': creates a Selcom order and returns the payment
+     * record with a gateway URL the user is redirected to.
      *
-     * @param float|null $amount Override amount (e.g. prorated upgrade). Defaults to subscription amount.
+     * @param float|null  $amount  Override amount (e.g. prorated upgrade). Defaults to subscription amount.
+     * @param string      $gateway 'snippe' or 'selcom'.
+     * @param string|null $phone   Mobile money number (snippe only). Defaults to the user's phone.
      */
-    public function initiatePayment(User $user, Subscription $subscription, ?float $amount = null): Payment
-    {
+    public function initiatePayment(
+        User $user,
+        Subscription $subscription,
+        ?float $amount = null,
+        string $gateway = 'selcom',
+        ?string $phone = null,
+    ): Payment {
         $chargeAmount = $amount ?? (float) $subscription->amount;
         $reference    = 'ZBL-' . strtoupper(Str::random(10));
+
+        if ($gateway === 'snippe') {
+            return $this->initiateSnippePayment($user, $subscription, $chargeAmount, $reference, $phone);
+        }
 
         $payment = Payment::create([
             'user_id'         => $user->id,
@@ -116,6 +130,143 @@ class PaymentService
     }
 
     /**
+     * Initiate a Snippe mobile-money payment (USSD push, user stays in-app).
+     */
+    protected function initiateSnippePayment(
+        User $user,
+        Subscription $subscription,
+        float $chargeAmount,
+        string $reference,
+        ?string $phone,
+    ): Payment {
+        $payment = Payment::create([
+            'user_id'         => $user->id,
+            'subscription_id' => $subscription->id,
+            'amount'          => $chargeAmount,
+            'method'          => 'mobile_money',
+            'provider'        => 'snippe',
+            'status'          => 'pending',
+            'reference'       => $reference,
+        ]);
+
+        if (! $this->snippeService->isConfigured()) {
+            Log::warning('Snippe not configured — payment created but no push sent', [
+                'reference' => $reference,
+            ]);
+            $payment->update(['metadata' => ['error' => 'Snippe not configured']]);
+            return $payment;
+        }
+
+        $phoneNormalized = $this->normalizePhone($phone ?: $user->phone);
+        $nameParts       = explode(' ', trim($user->name), 2);
+
+        $response = $this->snippeService->createPayment([
+            'payment_type' => 'mobile',
+            'details'      => [
+                'amount'   => (int) round($chargeAmount),
+                'currency' => 'TZS',
+            ],
+            'phone_number' => $phoneNormalized,
+            'customer'     => [
+                'firstname' => $nameParts[0] ?? $user->name,
+                'lastname'  => $nameParts[1] ?? '-',
+                'email'     => $user->email ?? 'noemail@zabunilink.com',
+            ],
+            'webhook_url'  => url('/api/payments/snippe/webhook'),
+            'metadata'     => [
+                'order_id' => $reference,
+                'user_id'  => $user->id,
+            ],
+        ], $reference);
+
+        $initiated = ($response['status'] ?? '') === 'success';
+        $snippeRef = $response['data']['reference'] ?? null;
+
+        if (! $initiated) {
+            Log::error('Snippe create-payment failed', [
+                'reference' => $reference,
+                'response'  => $response,
+            ]);
+        }
+
+        $payment->update([
+            'metadata' => [
+                'snippe_reference' => $snippeRef,
+                'snippe_initiated' => $initiated,
+                'phone'            => $phoneNormalized,
+                'snippe_response'  => $response,
+            ],
+        ]);
+
+        return $payment;
+    }
+
+    /**
+     * Handle a Snippe webhook event (payment.completed/failed/expired/voided).
+     */
+    public function handleSnippeWebhook(array $event): ?Payment
+    {
+        $data      = $event['data'] ?? [];
+        $orderId   = $data['metadata']['order_id'] ?? null;
+        $snippeRef = $data['reference'] ?? null;
+
+        $payment = null;
+
+        if ($orderId) {
+            $payment = Payment::where('reference', $orderId)->first();
+        }
+
+        if (! $payment && $snippeRef) {
+            $payment = Payment::where('provider', 'snippe')
+                ->where('metadata->snippe_reference', $snippeRef)
+                ->first();
+        }
+
+        if (! $payment) {
+            Log::warning('Snippe webhook: payment not found', [
+                'order_id'         => $orderId,
+                'snippe_reference' => $snippeRef,
+            ]);
+            return null;
+        }
+
+        // Already processed
+        if ($payment->status === 'completed') {
+            return $payment;
+        }
+
+        $type = $event['type'] ?? '';
+
+        if ($type === 'payment.completed') {
+            // Verify amount (allow TZS 1 rounding tolerance)
+            $webhookAmount = (float) ($data['amount']['value'] ?? 0);
+            if ($webhookAmount > 0 && abs((float) $payment->amount - $webhookAmount) > 1) {
+                Log::error('Snippe webhook amount mismatch', [
+                    'reference'       => $payment->reference,
+                    'expected_amount' => $payment->amount,
+                    'received_amount' => $webhookAmount,
+                ]);
+                return $payment;
+            }
+
+            $payment->update([
+                'status'         => 'completed',
+                'transaction_id' => $data['external_reference'] ?? $snippeRef,
+                'metadata'       => array_merge($payment->metadata ?? [], ['webhook' => $event]),
+            ]);
+
+            $this->activateSubscription($payment);
+        } elseif (in_array($type, ['payment.failed', 'payment.expired', 'payment.voided'])) {
+            $payment->update([
+                'status'   => 'failed',
+                'metadata' => array_merge($payment->metadata ?? [], ['webhook' => $event]),
+            ]);
+        }
+
+        return $payment->fresh();
+    }
+
+    /**
      * Handle the payment callback from Selcom.
      */
     public function handleCallback(array $data): Payment
@@ -160,12 +311,16 @@ class PaymentService
     }
 
     /**
-     * Check payment status by polling Selcom.
+     * Check payment status by polling the gateway.
      */
     public function checkPaymentStatus(Payment $payment): Payment
     {
         if ($payment->status === 'completed') {
             return $payment;
+        }
+
+        if ($payment->provider === 'snippe') {
+            return $this->checkSnippePaymentStatus($payment);
         }
 
         if (! $this->selcomService->isConfigured()) {
@@ -192,6 +347,39 @@ class PaymentService
 
             $this->activateSubscription($payment);
         } elseif (in_array(strtoupper($paymentStatus), ['FAILED', 'CANCELLED', 'EXPIRED'])) {
+            $payment->update([
+                'status'   => 'failed',
+                'metadata' => array_merge($payment->metadata ?? [], ['status_check' => $response]),
+            ]);
+        }
+
+        return $payment->fresh();
+    }
+
+    /**
+     * Poll Snippe for a pending payment's status.
+     */
+    protected function checkSnippePaymentStatus(Payment $payment): Payment
+    {
+        $snippeRef = $payment->metadata['snippe_reference'] ?? null;
+
+        if (! $snippeRef || ! $this->snippeService->isConfigured()) {
+            return $payment;
+        }
+
+        $response = $this->snippeService->getPayment($snippeRef);
+        $data     = $response['data'] ?? [];
+        $status   = strtolower($data['status'] ?? '');
+
+        if ($status === 'completed') {
+            $payment->update([
+                'status'         => 'completed',
+                'transaction_id' => $data['external_reference'] ?? $snippeRef,
+                'metadata'       => array_merge($payment->metadata ?? [], ['status_check' => $response]),
+            ]);
+
+            $this->activateSubscription($payment);
+        } elseif (in_array($status, ['failed', 'voided', 'expired'])) {
             $payment->update([
                 'status'   => 'failed',
                 'metadata' => array_merge($payment->metadata ?? [], ['status_check' => $response]),

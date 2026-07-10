@@ -272,6 +272,21 @@ export default {
     payment_activated: 'Your subscription has been activated. Enjoy your plan!',
     payment_failed: 'Payment Failed',
     payment_failed_desc: 'The payment could not be completed. Please try again.',
+    // Payment method chooser
+    pay_method_title: 'Choose Payment Method',
+    pay_method_mobile: 'Mobile Money',
+    pay_method_mobile_desc: 'M-Pesa, Airtel Money, Mixx by Yas (Tigo), Halotel — instant prompt on your phone',
+    pay_method_recommended: 'Recommended',
+    pay_method_selcom: 'Selcom Pay',
+    pay_method_selcom_desc: 'Card, Lipa Namba (QR), or mobile money via Selcom secure page',
+    pay_phone_label: 'Mobile money number',
+    pay_phone_ph: 'e.g. 0712 345 678',
+    pay_phone_invalid: 'Please enter a valid phone number.',
+    pay_continue: 'Continue to Pay',
+    // Snippe USSD push
+    snippe_prompt_title: 'Check Your Phone',
+    snippe_prompt_desc: 'We have sent a payment prompt to {phone}. Enter your mobile money PIN to confirm.',
+    snippe_waiting: 'Waiting for you to confirm on your phone...',
   },
 
   // Notifications

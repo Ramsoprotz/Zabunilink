@@ -54,6 +54,8 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'plan_id'       => 'required|integer|exists:plans,id',
             'billing_cycle' => 'required|string|in:monthly,quarterly,semi_annual,annual',
+            'gateway'       => 'sometimes|string|in:snippe,selcom',
+            'phone'         => 'required_if:gateway,snippe|nullable|string|max:20',
         ]);
 
         $user = $request->user();
@@ -69,7 +71,13 @@ class SubscriptionController extends Controller
             $validated['billing_cycle'],
         );
 
-        $payment = $this->paymentService->initiatePayment($user, $subscription);
+        $payment = $this->paymentService->initiatePayment(
+            $user,
+            $subscription,
+            null,
+            $validated['gateway'] ?? 'selcom',
+            $validated['phone'] ?? null,
+        );
 
         return response()->json([
             'message'      => 'Subscription created. Please complete payment.',
@@ -86,6 +94,8 @@ class SubscriptionController extends Controller
         $validated = $request->validate([
             'plan_id'       => 'required|integer|exists:plans,id',
             'billing_cycle' => 'required|string|in:monthly,quarterly,semi_annual,annual',
+            'gateway'       => 'sometimes|string|in:snippe,selcom',
+            'phone'         => 'required_if:gateway,snippe|nullable|string|max:20',
         ]);
 
         $user = $request->user();
@@ -109,6 +119,8 @@ class SubscriptionController extends Controller
                     $user,
                     $result['subscription'],
                     $amountDue,
+                    $validated['gateway'] ?? 'selcom',
+                    $validated['phone'] ?? null,
                 );
                 $result['payment'] = $payment;
             } else {

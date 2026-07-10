@@ -223,11 +223,113 @@
     <div v-if="error" class="neu-card-sm text-center text-danger text-sm">{{ error }}</div>
     <div v-if="success" class="neu-card-sm text-center text-success text-sm">{{ success }}</div>
 
+    <!-- Payment Method Chooser Modal -->
+    <div v-if="showMethodModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" @click.self="closeMethodModal">
+      <div class="neu-card w-full max-w-md">
+        <h3 class="text-lg font-bold text-text mb-4">{{ $t('subscription.pay_method_title') }}</h3>
+
+        <div class="space-y-3 mb-5">
+          <!-- Mobile Money (Snippe) -->
+          <button
+            v-if="subStore.paymentMethods.snippe"
+            class="w-full text-left p-4 rounded-xl border-2 transition-all duration-200"
+            :class="methodGateway === 'snippe' ? 'border-primary bg-primary/5' : 'border-surface-dark/40 hover:border-primary/40'"
+            @click="methodGateway = 'snippe'"
+          >
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-text text-sm">{{ $t('subscription.pay_method_mobile') }}</p>
+                  <p class="text-xs text-text-light mt-0.5">{{ $t('subscription.pay_method_mobile_desc') }}</p>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success whitespace-nowrap">{{ $t('subscription.pay_method_recommended') }}</span>
+            </div>
+
+            <!-- Phone input (inside the tile when selected) -->
+            <div v-if="methodGateway === 'snippe'" class="mt-3" @click.stop>
+              <label class="block text-xs text-text-light mb-1">{{ $t('subscription.pay_phone_label') }}</label>
+              <input
+                v-model="methodPhone"
+                type="tel"
+                class="neu-input text-sm"
+                :placeholder="$t('subscription.pay_phone_ph')"
+              />
+              <p v-if="methodPhoneError" class="text-xs text-danger mt-1">{{ methodPhoneError }}</p>
+            </div>
+          </button>
+
+          <!-- Selcom -->
+          <button
+            v-if="subStore.paymentMethods.selcom"
+            class="w-full text-left p-4 rounded-xl border-2 transition-all duration-200"
+            :class="methodGateway === 'selcom' ? 'border-primary bg-primary/5' : 'border-surface-dark/40 hover:border-primary/40'"
+            @click="methodGateway = 'selcom'"
+          >
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-semibold text-text text-sm">{{ $t('subscription.pay_method_selcom') }}</p>
+                <p class="text-xs text-text-light mt-0.5">{{ $t('subscription.pay_method_selcom_desc') }}</p>
+              </div>
+            </div>
+          </button>
+        </div>
+
+        <div class="flex gap-3">
+          <button class="neu-btn flex-1 py-2.5 text-sm font-medium text-text-light" @click="closeMethodModal">
+            {{ $t('common.cancel') }}
+          </button>
+          <button
+            class="neu-btn-primary flex-1 py-2.5 rounded-xl text-sm font-semibold"
+            :disabled="subStore.loading"
+            @click="confirmMethod"
+          >
+            <span v-if="subStore.loading">{{ $t('common.processing') }}</span>
+            <span v-else>{{ $t('subscription.pay_continue') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Payment Modal -->
     <div v-if="showPayment" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
       <div class="neu-card w-full max-w-md text-center">
-        <!-- Pending -->
-        <template v-if="paymentStatus === 'pending'">
+        <!-- Pending: Snippe USSD push (user stays in-app) -->
+        <template v-if="paymentStatus === 'pending' && paymentProvider === 'snippe'">
+          <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-text mb-2">{{ $t('subscription.snippe_prompt_title') }}</h3>
+          <p class="text-sm text-text-light mb-4">{{ $t('subscription.snippe_prompt_desc', { phone: paymentPhone }) }}</p>
+          <p class="text-sm font-semibold text-text mb-1">TZS {{ formatPrice(paymentAmount) }}</p>
+          <p class="text-xs text-text-light mb-6">{{ $t('subscription.payment_ref') }}: {{ paymentReference }}</p>
+
+          <div class="flex items-center justify-center gap-2 mb-6 p-3 rounded-xl bg-primary/5">
+            <div class="w-2 h-2 rounded-full bg-primary animate-bounce" style="animation-delay: 0s" />
+            <div class="w-2 h-2 rounded-full bg-primary animate-bounce" style="animation-delay: 0.15s" />
+            <div class="w-2 h-2 rounded-full bg-primary animate-bounce" style="animation-delay: 0.3s" />
+            <span class="text-xs text-text-light ml-2">{{ $t('subscription.snippe_waiting') }}</span>
+          </div>
+
+          <button class="neu-btn px-5 py-2.5 text-sm text-text-light w-full" @click="closePaymentModal">
+            {{ $t('subscription.payment_close') }}
+          </button>
+        </template>
+
+        <!-- Pending: Selcom (redirect gateway) -->
+        <template v-else-if="paymentStatus === 'pending'">
           <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
             <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -377,11 +479,13 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { useSubscriptionStore } from '../../stores/subscription'
+import { useAuthStore } from '../../stores/auth'
 
 const { t, locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const subStore = useSubscriptionStore()
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const error = ref('')
@@ -399,8 +503,17 @@ const paymentStatus = ref('pending')
 const paymentReference = ref('')
 const paymentAmount = ref(0)
 const paymentGatewayUrl = ref(null)
+const paymentProvider = ref('selcom')
+const paymentPhone = ref('')
 const paymentLinkClicked = ref(false)
 let paymentPollInterval = null
+
+// Payment method chooser state
+const showMethodModal = ref(false)
+const methodGateway = ref('snippe')
+const methodPhone = ref('')
+const methodPhoneError = ref('')
+let pendingPaymentCall = null
 
 const billingCycles = [
   { value: 'monthly', label: t('subscription.monthly'), savings: null },
@@ -494,11 +607,63 @@ function openPaymentModal(paymentData) {
   paymentReference.value = payment.reference
   paymentAmount.value = payment.amount
   paymentGatewayUrl.value = payment.metadata?.gateway_url || null
+  paymentProvider.value = payment.provider || 'selcom'
+  paymentPhone.value = payment.metadata?.phone || ''
   paymentStatus.value = 'pending'
+
+  // Snippe push failed to initiate — show failed state right away
+  if (payment.provider === 'snippe' && payment.metadata?.snippe_initiated === false) {
+    paymentStatus.value = 'failed'
+    showPayment.value = true
+    return
+  }
+
   showPayment.value = true
 
   // Start polling for payment status
   startPaymentPolling(payment.reference)
+}
+
+/**
+ * Ask the user how to pay, then run `call(gateway, phone)`.
+ * Skips the chooser when Snippe isn't available (Selcom only, as before).
+ */
+function requestPaymentMethod(call) {
+  if (!subStore.paymentMethods.snippe) {
+    call('selcom', null)
+    return
+  }
+
+  pendingPaymentCall = call
+  methodGateway.value = 'snippe'
+  methodPhone.value = methodPhone.value || authStore.user?.phone || ''
+  methodPhoneError.value = ''
+  showMethodModal.value = true
+}
+
+function closeMethodModal() {
+  showMethodModal.value = false
+  pendingPaymentCall = null
+}
+
+async function confirmMethod() {
+  methodPhoneError.value = ''
+
+  if (methodGateway.value === 'snippe') {
+    const digits = methodPhone.value.replace(/\D/g, '')
+    if (digits.length < 9 || digits.length > 15) {
+      methodPhoneError.value = t('subscription.pay_phone_invalid')
+      return
+    }
+  }
+
+  const call = pendingPaymentCall
+  showMethodModal.value = false
+  pendingPaymentCall = null
+
+  if (call) {
+    await call(methodGateway.value, methodGateway.value === 'snippe' ? methodPhone.value : null)
+  }
 }
 
 function startPaymentPolling(reference) {
@@ -547,35 +712,21 @@ async function handlePlanAction(plan) {
   error.value = ''
   success.value = ''
 
-  // No active subscription — direct subscribe
-  if (!subStore.mySubscription) {
-    try {
-      const result = await subStore.subscribe(plan.id, selectedCycle.value)
-      if (result.payment) {
-        openPaymentModal(result)
-      } else {
-        success.value = result.message || t('subscription.subscribe_success') + ' ' + plan.name
-        await subStore.fetchMySubscription()
+  // No active subscription (or on trial) — subscribe with chosen payment method
+  if (!subStore.mySubscription || subStore.mySubscription.is_trial) {
+    requestPaymentMethod(async (gateway, phone) => {
+      try {
+        const result = await subStore.subscribe(plan.id, selectedCycle.value, gateway, phone)
+        if (result.payment) {
+          openPaymentModal(result)
+        } else {
+          success.value = result.message || t('subscription.subscribe_success') + ' ' + plan.name
+          await subStore.fetchMySubscription()
+        }
+      } catch (err) {
+        error.value = err.response?.data?.message || t('subscription.subscribe_error')
       }
-    } catch (err) {
-      error.value = err.response?.data?.message || t('subscription.subscribe_error')
-    }
-    return
-  }
-
-  // On a trial — upgrading from trial is like a new subscription (no proration on free trial)
-  if (subStore.mySubscription.is_trial) {
-    try {
-      const result = await subStore.subscribe(plan.id, selectedCycle.value)
-      if (result.payment) {
-        openPaymentModal(result)
-      } else {
-        success.value = result.message || t('subscription.upgrade_success')
-        await subStore.fetchMySubscription()
-      }
-    } catch (err) {
-      error.value = err.response?.data?.message || t('subscription.change_error')
-    }
+    })
     return
   }
 
@@ -593,22 +744,32 @@ async function confirmPlanChange() {
   error.value = ''
   success.value = ''
 
-  try {
-    const result = await subStore.changePlan(previewPlan.value.id, selectedCycle.value)
-    showPreview.value = false
+  const planId = previewPlan.value.id
+  const needsPayment = preview.value?.action === 'upgrade' && Number(preview.value?.amount_due) > 0
+  showPreview.value = false
 
-    if (result.action === 'downgrade_scheduled') {
-      success.value = result.message
-      await subStore.fetchMySubscription()
-    } else if (result.payment) {
-      openPaymentModal(result)
-    } else {
-      success.value = result.message || t('subscription.upgrade_success')
-      await subStore.fetchMySubscription()
+  const executeChange = async (gateway, phone) => {
+    try {
+      const result = await subStore.changePlan(planId, selectedCycle.value, gateway, phone)
+
+      if (result.action === 'downgrade_scheduled') {
+        success.value = result.message
+        await subStore.fetchMySubscription()
+      } else if (result.payment) {
+        openPaymentModal(result)
+      } else {
+        success.value = result.message || t('subscription.upgrade_success')
+        await subStore.fetchMySubscription()
+      }
+    } catch (err) {
+      error.value = err.response?.data?.message || t('subscription.change_error')
     }
-  } catch (err) {
-    error.value = err.response?.data?.message || t('subscription.change_error')
-    showPreview.value = false
+  }
+
+  if (needsPayment) {
+    requestPaymentMethod(executeChange)
+  } else {
+    await executeChange('selcom', null)
   }
 }
 
@@ -626,7 +787,11 @@ async function handleCancelScheduled() {
 
 onMounted(async () => {
   try {
-    await Promise.all([subStore.fetchPlans(), subStore.fetchMySubscription()])
+    await Promise.all([
+      subStore.fetchPlans(),
+      subStore.fetchMySubscription(),
+      subStore.fetchPaymentMethods(),
+    ])
   } finally {
     loading.value = false
   }

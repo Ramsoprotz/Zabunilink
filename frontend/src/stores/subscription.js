@@ -6,6 +6,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   const plans = ref([])
   const mySubscription = ref(null)
   const trialConfig = ref({ enabled: false, days: null })
+  const paymentMethods = ref({ snippe: false, selcom: true })
   const loading = ref(false)
 
   async function fetchPlans() {
@@ -13,6 +14,15 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     plans.value = data.data
     if (data.trial) {
       trialConfig.value = data.trial
+    }
+  }
+
+  async function fetchPaymentMethods() {
+    try {
+      const { data } = await api.get('/payment-methods')
+      paymentMethods.value = data.data
+    } catch {
+      paymentMethods.value = { snippe: false, selcom: true }
     }
   }
 
@@ -25,12 +35,14 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     }
   }
 
-  async function subscribe(planId, billingCycle) {
+  async function subscribe(planId, billingCycle, gateway = 'selcom', phone = null) {
     loading.value = true
     try {
       const { data } = await api.post('/subscribe', {
         plan_id: planId,
         billing_cycle: billingCycle,
+        gateway,
+        phone,
       })
       return data
     } finally {
@@ -38,12 +50,14 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     }
   }
 
-  async function changePlan(planId, billingCycle) {
+  async function changePlan(planId, billingCycle, gateway = 'selcom', phone = null) {
     loading.value = true
     try {
       const { data } = await api.post('/subscription/change-plan', {
         plan_id: planId,
         billing_cycle: billingCycle,
+        gateway,
+        phone,
       })
       return data
     } finally {
@@ -88,8 +102,10 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     plans,
     mySubscription,
     trialConfig,
+    paymentMethods,
     loading,
     fetchPlans,
+    fetchPaymentMethods,
     fetchMySubscription,
     subscribe,
     changePlan,

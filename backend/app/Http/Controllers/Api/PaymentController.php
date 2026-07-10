@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Integrations\SelcomService;
+use App\Integrations\SnippeService;
 use App\Models\Payment;
 use App\Services\PaymentService;
 use Illuminate\Http\JsonResponse;
@@ -15,7 +16,44 @@ class PaymentController extends Controller
     public function __construct(
         protected PaymentService $paymentService,
         protected SelcomService  $selcomService,
+        protected SnippeService  $snippeService,
     ) {}
+
+    /**
+     * Handle the Snippe payment webhook.
+     */
+    public function snippeWebhook(Request $request): JsonResponse
+    {
+        $payload = $request->getContent();
+
+        if (! $this->snippeService->verifyWebhookSignature($payload, $request->headers->all())) {
+            Log::warning('Snippe webhook: invalid or missing signature');
+            return response()->json(['message' => 'Invalid signature'], 401);
+        }
+
+        $event = json_decode($payload, true);
+
+        if (! is_array($event) || empty($event['type'])) {
+            return response()->json(['message' => 'Invalid payload'], 400);
+        }
+
+        Log::info('Snippe webhook received', ['type' => $event['type']]);
+
+        try {
+            $payment = $this->paymentService->handleSnippeWebhook($event);
+
+            return response()->json([
+                'message' => 'Webhook processed.',
+                'status'  => $payment?->status,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Snippe webhook failed', [
+                'error' => $e->getMessage(),
+                'type'  => $event['type'],
+            ]);
+            return response()->json(['message' => 'Processing failed'], 500);
+        }
+    }
 
     /**
      * Handle the Selcom payment webhook callback.

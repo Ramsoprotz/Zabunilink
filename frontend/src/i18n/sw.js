@@ -269,6 +269,21 @@ export default {
     payment_activated: 'Usajili wako umewashwa. Furahia mpango wako!',
     payment_failed: 'Malipo Yameshindikana',
     payment_failed_desc: 'Malipo hayakuweza kukamilika. Tafadhali jaribu tena.',
+    // Payment method chooser
+    pay_method_title: 'Chagua Njia ya Malipo',
+    pay_method_mobile: 'Pesa za Simu',
+    pay_method_mobile_desc: 'M-Pesa, Airtel Money, Mixx by Yas (Tigo), Halotel — ujumbe wa malipo moja kwa moja kwenye simu yako',
+    pay_method_recommended: 'Inapendekezwa',
+    pay_method_selcom: 'Selcom Pay',
+    pay_method_selcom_desc: 'Kadi, Lipa Namba (QR), au pesa za simu kupitia ukurasa salama wa Selcom',
+    pay_phone_label: 'Namba ya pesa za simu',
+    pay_phone_ph: 'mf. 0712 345 678',
+    pay_phone_invalid: 'Tafadhali weka namba sahihi ya simu.',
+    pay_continue: 'Endelea Kulipa',
+    // Snippe USSD push
+    snippe_prompt_title: 'Angalia Simu Yako',
+    snippe_prompt_desc: 'Tumetuma ombi la malipo kwenye {phone}. Weka PIN yako ya pesa za simu kuthibitisha.',
+    snippe_waiting: 'Tunasubiri uthibitishe kwenye simu yako...',
   },
 
   // Notifications

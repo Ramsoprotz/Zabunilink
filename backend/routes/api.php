@@ -26,6 +26,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::post('/payments/callback', [PaymentController::class, 'callback']);
+Route::post('/payments/snippe/webhook', [PaymentController::class, 'snippeWebhook']);
 
 // Public browsing
 Route::get('/plans', [SubscriptionController::class, 'plans']);
@@ -54,6 +55,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Payments
     Route::get('/payments/{reference}/status', [PaymentController::class, 'checkStatus']);
+    Route::get('/payment-methods', function () {
+        return response()->json([
+            'data' => [
+                'snippe' => app(\App\Integrations\SnippeService::class)->isEnabled(),
+                'selcom' => app(\App\Integrations\SelcomService::class)->isConfigured(),
+            ],
+        ]);
+    });
 
     // Basic-tier features (require an active subscription or trial)
     Route::middleware('subscribed')->group(function () {
