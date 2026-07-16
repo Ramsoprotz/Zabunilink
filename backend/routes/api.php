@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Admin\TenderIngestController;
+use App\Http\Controllers\Api\Partner\PartnerTenderController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\NotificationController;
@@ -93,6 +94,14 @@ Route::middleware('auth:sanctum')->group(function () {
 // Admin ingest API (Sanctum token + admin role)
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     Route::post('/tenders/ingest', [TenderIngestController::class, 'bulk']);
+});
+
+// Partner data API (Sanctum token + partner role, read-only, rate limited)
+Route::middleware(['auth:sanctum', 'partner', 'throttle:60,1'])->prefix('v1/partner')->group(function () {
+    Route::get('/tenders', [PartnerTenderController::class, 'index']);
+    Route::get('/tenders/{id}', [PartnerTenderController::class, 'show']);
+    Route::get('/categories', [PartnerTenderController::class, 'categories']);
+    Route::get('/locations', [PartnerTenderController::class, 'locations']);
 });
 
 // Tenderee routes (Business plan)
